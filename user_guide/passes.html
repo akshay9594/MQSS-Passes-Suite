@@ -257,8 +257,8 @@ MLIR dialects.</p></li>
 <li><p>Transpilation or Native-gate-set mapping is currently only enabled for <code class="docutils literal notranslate"><span class="pre">Quake</span></code>.</p></li>
 <li><p>Please refer to the example usage section below on instructions for how to enable a pass</p></li>
 </ol>
-<section id="standard-optimization-passes">
-<h2>Standard Optimization Passes<a class="headerlink" href="#standard-optimization-passes" title="Link to this heading">¶</a></h2>
+<section id="standard-optimization-passes-target-device-agnostic">
+<h2>Standard Optimization Passes (Target Device Agnostic)<a class="headerlink" href="#standard-optimization-passes-target-device-agnostic" title="Link to this heading">¶</a></h2>
 <section id="commoncommutepass">
 <h3>CommonCommutePass<a class="headerlink" href="#commoncommutepass" title="Link to this heading">¶</a></h3>
 <p>This pass searches commutes gates that match a specific pattern.</p>
@@ -316,8 +316,8 @@ MLIR dialects.</p></li>
 <p>Eliminate common sub-expressions.</p>
 </section>
 </section>
-<section id="transpilation-passes">
-<h2>Transpilation passes<a class="headerlink" href="#transpilation-passes" title="Link to this heading">¶</a></h2>
+<section id="transpilation-passes-target-device-specific">
+<h2>Transpilation passes (Target Device Specific)<a class="headerlink" href="#transpilation-passes-target-device-specific" title="Link to this heading">¶</a></h2>
 <section id="commonmappingpass">
 <h3>CommonMappingPass<a class="headerlink" href="#commonmappingpass" title="Link to this heading">¶</a></h3>
 <p>A dialect-agnostic Qubit mapping pass. Maps logical qubits to physical qubits.</p>
@@ -440,7 +440,7 @@ The Quantinuum backend supports the following gates:</br>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Passes</a><ul>
-<li><a class="reference internal" href="#standard-optimization-passes">Standard Optimization Passes</a><ul>
+<li><a class="reference internal" href="#standard-optimization-passes-target-device-agnostic">Standard Optimization Passes (Target Device Agnostic)</a><ul>
 <li><a class="reference internal" href="#commoncommutepass">CommonCommutePass</a></li>
 <li><a class="reference internal" href="#commondecompositionpass">CommonDecompositionPass</a></li>
 <li><a class="reference internal" href="#commongatecancellationpass">CommonGateCancellationPass</a></li>
@@ -451,7 +451,7 @@ The Quantinuum backend supports the following gates:</br>
 <li><a class="reference internal" href="#cse">cse</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#transpilation-passes">Transpilation passes</a><ul>
+<li><a class="reference internal" href="#transpilation-passes-target-device-specific">Transpilation passes (Target Device Specific)</a><ul>
 <li><a class="reference internal" href="#commonmappingpass">CommonMappingPass</a></li>
 <li><a class="reference internal" href="#fermioniq-gate-set-mapping">fermioniq-gate-set-mapping</a></li>
 <li><a class="reference internal" href="#ionq-gate-set-mapping">ionq-gate-set-mapping</a></li>
