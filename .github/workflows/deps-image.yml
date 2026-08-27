@@ -11,7 +11,7 @@ on:
     # TODO(akshay): "akshay/cmake-deps" is temporary, only to let this PR's own
     # CI publish+test a matching deps image without waiting for merge to
     # develop. Remove it from this list before merging.
-    branches: [develop, akshay/cmake-deps]
+    branches: [develop]
     paths:
       - ".devcontainer/deps.DockerFile"
       - "cmake/FetchLLVM.cmake"

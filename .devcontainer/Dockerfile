@@ -7,7 +7,7 @@ ARG base_image=ubuntu:22.04
 # built from; override with --build-arg DEPS_IMAGE=... to test a different one,
 # and bump the default here whenever cmake/FetchLLVM.cmake, cmake/FindCUDAQ.cmake,
 # or cmake/FindCatalyst.cmake change their pinned versions.
-ARG DEPS_IMAGE=ghcr.io/akshay9594/MQSS-Passes-Suite/mqssci-deps:llvm22.1.0-cudaq0.15.0-catalyst0.15.0
+ARG DEPS_IMAGE=ghcr.io/akshay9594/mqss-passes-suite/mqssci-deps:llvm22.1.0-cudaq0.15.0-catalyst0.15.0
 
 FROM ${DEPS_IMAGE} AS deps
 
