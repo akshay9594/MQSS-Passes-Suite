@@ -1,6 +1,16 @@
 # [Operating System]
 ARG base_image=ubuntu:22.04
 
+# Prebuilt LLVM/CUDA-Q/Catalyst image (see .devcontainer/deps.DockerFile and
+# .github/workflows/deps-image.yml) -- avoids re-fetching and rebuilding these
+# from source on every container build. Tag documents the exact pins it was
+# built from; override with --build-arg DEPS_IMAGE=... to test a different one,
+# and bump the default here whenever cmake/FetchLLVM.cmake, cmake/FindCUDAQ.cmake,
+# or cmake/FindCatalyst.cmake change their pinned versions.
+ARG DEPS_IMAGE=ghcr.io/munich-quantum-software-stack/mqss-quantum-compilation-suite/mqssci-deps:llvm22.1.0-cudaq0.15.0-catalyst0.15.0
+
+FROM ${DEPS_IMAGE} AS deps
+
 FROM ${base_image} AS prereqs
 SHELL ["/bin/bash", "-c"]
 ARG toolchain=gcc11
@@ -89,3 +99,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python3 -m pip install sphinx myst-parser furo
 
 RUN git config --global gc.auto 0
+
+# ---- Prebuilt heavy dependencies (LLVM/MLIR, CUDA-Q, Catalyst) --------------
+# Pulled in from the deps stage above instead of each being fetched+built from
+# source at CMake configure time. FindCUDAQ.cmake/FindCatalyst.cmake/
+# FetchLLVM.cmake all check these locations (via env var / CMAKE_PREFIX_PATH)
+# before falling back to their own auto-fetch logic, so this is a pure
+# accelerant -- deleting this block still works, just slower.
+COPY --from=deps /opt/deps /opt/deps
+ENV LLVM_DIR=/opt/deps/llvm/lib/cmake/llvm \
+    MLIR_DIR=/opt/deps/llvm/lib/cmake/mlir \
+    CUDAQ_INSTALL_PREFIX=/opt/deps/cudaq \
+    CATALYST_INSTALL_PREFIX=/opt/deps/catalyst

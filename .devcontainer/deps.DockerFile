@@ -1,7 +1,7 @@
 # [Operating System]
 ARG base_image=ubuntu:22.04
 
-FROM ${base_image} AS prereqs
+FROM ${base_image} AS builder
 SHELL ["/bin/bash", "-c"]
 ARG toolchain=gcc11
 
@@ -97,21 +97,36 @@ RUN curl -LsSf https://github.com/munich-quantum-software/setup-mlir/releases/la
 
 # 2. CUDA-Q, same clone/patch/configure/build/install steps as FindCUDAQ.cmake
 RUN git clone --depth 1 --branch 0.15.0 https://github.com/NVIDIA/cuda-quantum.git /src/cudaq && \
-    sed -i 's/add_subdirectory(nvqpp)/# patched out/' /src/cudaq/tools/CMakeLists.txt && \
+    sed -i 's/add_subdirectory(nvqpp)/# patched out/' /src/cudaq/cudaq/tools/CMakeLists.txt && \
     cmake -G Ninja -S /src/cudaq -B /build/cudaq \
       -DCMAKE_INSTALL_PREFIX=/opt/deps/cudaq -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_DIR=/opt/deps/llvm/lib/cmake/llvm -DMLIR_DIR=/opt/deps/llvm/lib/cmake/mlir \
-      -DCUDAQ_ENABLE_PYTHON=OFF -DCUDAQ_BUILD_TESTS=OFF -DCUDAQ_DISABLE_RUNTIME=ON \
+      -DCMAKE_CXX_FLAGS_RELEASE=-O1 -DCUDAQ_ENABLE_PYTHON=OFF -DCUDAQ_BUILD_TESTS=OFF -DCUDAQ_DISABLE_RUNTIME=ON \
       -DCMAKE_DISABLE_FIND_PACKAGE_Clang=TRUE && \
     cmake --build /build/cudaq --target QuakeDialect CCDialect QECDialect OptimBuilder OptCodeGen && \
-    cmake --install /build/cudaq --component QuakeDialect && CCDialect && QECDialect && OptimBuilder && OptCodeGen
+    cmake --install /build/cudaq --component QuakeDialect && \
+    cmake --install /build/cudaq --component CCDialect && \
+    cmake --install /build/cudaq --component QECDialect && \
+    cmake --install /build/cudaq --component OptimBuilder && \
+    cmake --install /build/cudaq --component OptCodeGen && \
+    mkdir -p /opt/deps/cudaq/include && \
+    cp -r /src/cudaq/cudaq/include/cudaq /opt/deps/cudaq/include/ && \
+    cp -r /build/cudaq/cudaq/include/cudaq /opt/deps/cudaq/include/
 
-RUN git clone --depth 1 --branch v0.15.0 https://github.com/PennyLaneAI/catalyst.git /src/catalyst && \
+RUN git clone --depth 1 --branch v0.15.0 https://github.com/PennyLaneAI/catalyst.git /src/catalyst/ && \
     sed -i 's/add_subdirectory(Driver)/# patched out/' /src/catalyst/mlir/lib/CMakeLists.txt && \
-    cmake -G Ninja -S /src/catalyst -B /build/catalyst \
-      -DCMAKE_INSTALL_PREFIX=/opt/deps/catalyst -DCMAKE_BUILD_TYPE=Release \
+    cmake -G Ninja -S /src/catalyst/mlir -B /build/catalyst \
+      -DCMAKE_INSTALL_PREFIX=/opt/deps/catalyst -DCATALYST_DOCS_ONLY=ON -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_DIR=/opt/deps/llvm/lib/cmake/llvm -DMLIR_DIR=/opt/deps/llvm/lib/cmake/mlir && \
-    cmake --build /build/catalyst --target MLIRMBQC MLIRQRef MLIRQuantum
+    cmake --build /build/catalyst --target MLIRMBQC MLIRQRef MLIRQuantum && \
+    mkdir -p /opt/deps/catalyst/include /opt/deps/catalyst/lib && \
+    for d in Quantum QRef MBQC; do \
+      cp -r /src/catalyst/mlir/include/$d /opt/deps/catalyst/include/ && \
+      cp -r /build/catalyst/include/$d /opt/deps/catalyst/include/; \
+    done && \
+    for l in MLIRMBQC MLIRQRef MLIRQuantum; do \
+      cp $(find /build/catalyst -name "lib${l}.a") /opt/deps/catalyst/lib/; \
+    done
 
 FROM scratch AS deps
 COPY --from=builder /opt/deps /opt/deps
