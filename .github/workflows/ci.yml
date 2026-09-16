@@ -43,21 +43,14 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache
           docker system prune -af
 
-      # Compute the exact deps image tag these pins map to (same logic as
-      # .github/workflows/deps-image.yml) so CI never drifts from
-      # .devcontainer/Dockerfile's own hardcoded default ARG -- if someone
-      # bumps a pin here without deps-image.yml having published a matching
-      # tag yet, this fails loudly on a missing manifest instead of silently
-      # building against a stale/mismatched deps image.
+      # Compute the exact deps image tag these pins map to, so CI never drifts from
+      # .devcontainer/Dockerfile's own hardcoded default ARG -- if someone bumps a pin
+      # here without deps-image.yml having published a matching tag yet, this fails
+      # loudly on a missing manifest instead of silently building against a
+      # stale/mismatched deps image.
       - name: Compute deps image tag
         id: deps_vars
-        run: |
-          llvm_version=$(grep -A1 'set(MQSS_LLVM_VERSION' cmake/FetchLLVM.cmake | tail -1 | grep -oP '"\K[^"]+')
-          cudaq_tag=$(grep -A1 'set(CUDAQ_GIT_TAG' cmake/FindCUDAQ.cmake | tail -1 | grep -oP '"\K[^"]+')
-          catalyst_tag=$(grep -A1 'set(CATALYST_GIT_TAG' cmake/FindCatalyst.cmake | tail -1 | grep -oP '"\K[^"]+')
-          catalyst_tag=${catalyst_tag#v}
-          image=$(echo "ghcr.io/${{ github.repository }}/mqssci-deps" | tr '[:upper:]' '[:lower:]')
-          echo "image=${image}:llvm${llvm_version}-cudaq${cudaq_tag}-catalyst${catalyst_tag}" >> "$GITHUB_OUTPUT"
+        uses: ./.github/actions/compute-deps-image-tag
 
       # GHCR images pushed with GITHUB_TOKEN are private by default, so the
       # docker build below needs to authenticate to pull DEPS_IMAGE even

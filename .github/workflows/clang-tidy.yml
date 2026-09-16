@@ -30,9 +30,18 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}"
           --password-stdin
 
+      # Shared with .github/workflows/ci.yml and codeql.yml so this can't drift from
+      # ci.yml's build-arg -- otherwise this job would silently fall back to
+      # .devcontainer/Dockerfile's hardcoded default ARG, which points at the
+      # upstream org's image and 403s from a fork's GITHUB_TOKEN.
+      - name: Compute deps image tag
+        id: deps_vars
+        uses: ./.github/actions/compute-deps-image-tag
+
       - name: Build Docker image
         run: |
           docker build --build-arg CMAKE_ARCH=x86_64 \
+            --build-arg DEPS_IMAGE="${{ steps.deps_vars.outputs.image }}" \
             --progress=plain -t mqss-pass-dev -f .devcontainer/Dockerfile .
 
       - name: Configure build (generate compile_commands.json)
