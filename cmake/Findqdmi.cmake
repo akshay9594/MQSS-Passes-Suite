@@ -25,3 +25,6 @@ FetchContent_MakeAvailable(qdmi)
 set(BUILD_SHARED_LIBS
     ${_qdmi_saved_shared_libs}
     CACHE BOOL "" FORCE)
+
+set(QDMI_INCLUDE_DIR "${qdmi_SOURCE_DIR}/include")
+set(QDMI_EXAMPLES_DIR "${qdmi_SOURCE_DIR}/examples/")

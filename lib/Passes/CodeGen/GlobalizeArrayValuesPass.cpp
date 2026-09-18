@@ -6,7 +6,7 @@
  * the terms of the Apache License 2.0 which accompanies this distribution.    *
  ******************************************************************************/
 
-#include "Passes/Transforms/PassIncludes.h"
+#include "Utils/TransformUtils.h"
 #include "cudaq/Optimizer/Builder/Intrinsics.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dominance.h"

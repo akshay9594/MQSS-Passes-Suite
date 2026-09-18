@@ -1,5 +1,6 @@
 add_mlir_library(
   MQSSCICodeGenPasses
+  SHARED
   LLVMDialectToLLVMIRPass.cpp
   QuakeToQASM2Pass.cpp
   ConversionPatterns.cpp

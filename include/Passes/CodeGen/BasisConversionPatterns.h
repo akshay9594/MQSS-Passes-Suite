@@ -19,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "Utils/DialectUtils.h"
 #include "Utils/Error.h"
+#include "Utils/TransformUtils.h"
 #include "mlir/Target/LLVMIR/ModuleTranslation.h"
 
 #include "llvm/IR/Module.h"

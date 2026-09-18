@@ -17,14 +17,16 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
-#include "Passes/Transforms/TranspilationPassUtils.h"
+#include "Utils/TransformUtils.h"
+#include "ir/QuantumComputation.hpp"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Rewrite/FrozenRewritePatternSet.h"
 #include "sc/exact/ExactMapper.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
-// #include "ir/QuantumComputation.hpp"
 
 using namespace mlir;
 
-std::optional<double> getConstantDouble(mlir::Value v) {
+static std::optional<double> getConstantDouble(mlir::Value v) {
   auto defOp = v.getDefiningOp<mlir::arith::ConstantOp>();
   if (!defOp)
     return std::nullopt;
@@ -36,8 +38,9 @@ std::optional<double> getConstantDouble(mlir::Value v) {
   return attr.getValueAsDouble();
 }
 
-void resolveSSAformForMeasureOps(mlir::Operation *OldMeasOp,
-                                 SmallVector<mlir::Value, 2> newResults) {
+static void
+resolveSSAformForMeasureOps(mlir::Operation *OldMeasOp,
+                            SmallVector<mlir::Value, 2> newResults) {
   // llvm::outs() << "Old meas op: " << *OldMeasOp
   //              << " results: " << OldMeasOp->getResults().size() << ","
   //              << newResults.size() << "\n";
@@ -52,33 +55,9 @@ void resolveSSAformForMeasureOps(mlir::Operation *OldMeasOp,
   OldMeasOp->erase();
 }
 
-// Performs a controlled Dead-Code elimination optimization.
-// It is less aggressive than MLIR's canonicalize and cse optimizations.
-// canonicalize and cse can remove newly introduced gates.
-void controlledDCE(SmallPtrSet<mlir::Operation *, 16> OpsToErase,
-                   mlir::Value OldAllocaOp, mlir::Value newAllocOp) {
-  llvm::SmallPtrSet<mlir::Operation *, 16> operandsToCleanup;
-
-  for (mlir::Operation *op : OpsToErase) {
-
-    for (mlir::Value operand : op->getOperands()) {
-      if (!OpsToErase.contains(operand.getDefiningOp()))
-        operandsToCleanup.insert(operand.getDefiningOp());
-    }
-  }
-
-  eraseOpsSafely(OpsToErase);
-  eraseOpsSafely(operandsToCleanup);
-
-  OldAllocaOp.replaceAllUsesWith(newAllocOp);
-  assert(OldAllocaOp.use_empty() &&
-         "Old alloca cannot have uses before being erased!");
-  OldAllocaOp.getDefiningOp()->erase();
-}
-
 // Load the measurement operation within QuantumComputation
-static void loadMeasureOpIntQC(QuantumOpView qview,
-                               qc::QuantumComputation &qc) {
+static void loadMeasureOpIntoQC(QuantumOpView qview,
+                                qc::QuantumComputation &qc) {
 
   auto targetQubitVector = qview.getQubits(QubitRole::Target).ids;
   assert((targetQubitVector.size() == 1) &&
@@ -141,8 +120,9 @@ static void loadGates(mlir::Operation *gateOp, qc::QuantumComputation &qc,
   }
 }
 
-void loadGateOpsIntoQC(mlir::Operation *gateOp, QuantumOpView qview,
-                       qc::QuantumComputation &qc, bool isControlled = false) {
+static void loadGateOpsIntoQC(mlir::Operation *gateOp, QuantumOpView qview,
+                              qc::QuantumComputation &qc,
+                              bool isControlled = false) {
 
   int64_t controlQubitIdx = -2;
   int64_t targetQubitIdx = -2;
