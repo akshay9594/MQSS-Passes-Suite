@@ -19,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "Passes/CodeGen/BasisConversionPatterns.h"
 #include "Passes/CodeGen/CodeGenPasses.h"
+#include "Utils/DebugUtils.h"
 
 #include <llvm/ADT/StringSet.h>
 
@@ -282,6 +283,7 @@ public:
   void runOnOperation() override {
     bool wasApplied = false;
 
+    MQSS_DEBUG("\n[Applying Pass: BasisConversion]\n");
     auto kernel = getOperation();
     llvm::StringSet<> native;
     auto split_gates = split(gates, ",");

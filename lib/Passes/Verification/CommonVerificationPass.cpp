@@ -23,7 +23,6 @@ public:
   void runOnOperation() override {
     auto &selector = getAnalysis<DialectAnalysisSelector>();
     auto &analysis = *selector.get();
-    auto DialectTy = selector.getDialect();
 
     MQSS_DEBUG("\n[Applying Pass: Circuit Verification]\n");
 

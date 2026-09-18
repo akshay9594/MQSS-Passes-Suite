@@ -7,6 +7,7 @@ add_mlir_library(
   PUBLIC
   MQSSSupportedDialects
   MQT::CoreIR
+  MQT::QCEC
   MLIRPass
   MLIRTransforms)
 
@@ -15,5 +16,6 @@ if(TARGET obj.MQSSCIVerificationPasses)
   target_compile_options(obj.MQSSCIVerificationPasses PRIVATE -fexceptions)
 endif()
 
-target_include_directories(MQSSCIVerificationPasses
-                           PRIVATE ${MQT_CORE_INCLUDE_DIR})
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(MQSSCIVerificationPasses PRIVATE MQSS_ENABLE_DEBUG)
+endif()

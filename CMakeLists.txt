@@ -110,6 +110,10 @@ target_include_directories(mqss-opt PRIVATE ${MQSSCI_ROOT_DIR}/include
 target_link_libraries(mqss-opt PUBLIC MLIROptLib MQSSCITransformPasses
                                       MQSSCIVerificationPasses)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(mqss-opt PRIVATE MQSS_ENABLE_DEBUG)
+endif()
+
 # Ensure it outputs to INSTALL_DIR
 set_target_properties(mqss-opt PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                           "${INSTALL_DIR}")

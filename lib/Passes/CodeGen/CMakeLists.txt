@@ -25,3 +25,6 @@ add_mlir_library(
   MLIRTargetLLVMIRExport)
 
 target_compile_options(MQSSCICodeGenPasses PRIVATE -fexceptions)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(MQSSCICodeGenPasses PRIVATE MQSS_ENABLE_DEBUG)
+endif()

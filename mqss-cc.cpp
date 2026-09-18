@@ -112,7 +112,9 @@ int main(int argc, char **argv) {
   // before CLI parsing happens below (registerAndParseCLIOptions), since
   // LLVM's cl::opt system requires every option to exist before
   // cl::ParseCommandLineOptions runs.
-  // mlir::PassPipelineCLParser pipeline("", "Compiler passes to run");
+  cl::opt<string> VerificationModeCLOpt(
+      "verify", cl::desc("Specify verification mode: off, always, final"),
+      cl::value_desc("mode"), cl::init("off"));
 
   llvm::StringRef toolName = "MQSS Optimizer\n";
 
@@ -120,6 +122,7 @@ int main(int argc, char **argv) {
   auto [inputFilename, outputFilename] =
       registerAndParseCLIOptions(argc, argv, toolName, registry);
 
+  auto verifymode = VerificationModeCLOpt.getValue();
   // Built from CL options only after parsing has happened, so it reflects
   // whatever flags the user actually passed.
   MlirOptMainConfig config = MlirOptMainConfig::createFromCLOptions();
@@ -150,7 +153,8 @@ int main(int argc, char **argv) {
   // a separate PassPipelineCLParser.
   auto defaultConfig = config;
   config.setPassPipelineSetupFn(
-      [defaultConfig](mlir::PassManager &pm) -> mlir::LogicalResult {
+      [defaultConfig,
+       verifymode](mlir::PassManager &pm) -> mlir::LogicalResult {
         auto errorHandler = [&](const llvm::Twine &msg) {
           mlir::emitError(mlir::UnknownLoc::get(pm.getContext())) << msg;
           return mlir::failure();
@@ -163,9 +167,13 @@ int main(int argc, char **argv) {
         if (failed(defaultConfig.setupPassPipeline(pm)))
           return mlir::failure();
 
-        pm.addInstrumentation(
-            std::make_unique<EquivalenceVerificationInstrumentation>());
-        return mlir::success();
+        if (verifymode == "final" || verifymode == "always") {
+          llvm::DenseMap<llvm::StringRef, VerifyQuantumComputationTy> snapshot;
+          pm.addInstrumentation(
+              std::make_unique<EquivalenceVerificationInstrumentation>(
+                  std::move(snapshot)));
+          return mlir::success();
+        }
       });
 
   return mlir::asMainReturnCode(

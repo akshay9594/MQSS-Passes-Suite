@@ -146,7 +146,7 @@ struct QuantumOpView {
 
   QubitOperands &getQubits(QubitRole role) { return qubits[role]; }
 
-  bool isControlled() { return !getQubits(QubitRole::Control).empty(); }
+  bool isControlled() const { return !getQubits(QubitRole::Control).empty(); }
 
   [[nodiscard]] bool hasValueSemantics() const {
     return getQubits(QubitRole::Control).hasValueSemantics() ||
