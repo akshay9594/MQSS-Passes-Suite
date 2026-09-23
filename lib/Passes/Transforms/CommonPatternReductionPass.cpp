@@ -17,13 +17,14 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
-#include "Passes/Transforms/PassUtils.h"
+#include "Passes/Transforms/PassLogic.h"
+#include "Passes/Transforms/TransformPasses.h"
 #include "Utils/DebugUtils.h"
 
 namespace mqss::mqssci::opt {
 
 #define GEN_PASS_DEF_COMMONREDUCTIONPASS
-#include "Passes/Transforms/Transforms.h.inc"
+#include "Passes/Transforms/TransformPasses.h.inc"
 
 } // namespace mqss::mqssci::opt
 

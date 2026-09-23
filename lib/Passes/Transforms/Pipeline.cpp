@@ -18,8 +18,8 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
 #include "Passes/CodeGen/CodeGenPasses.h"
-#include "Passes/Transforms/PassUtils.h"
-#include "Passes/Transforms/Transforms.h"
+#include "Passes/Transforms/Pipelines.h"
+#include "Passes/Transforms/TransformPasses.h"
 
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/raw_ostream.h>

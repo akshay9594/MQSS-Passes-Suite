@@ -44,6 +44,7 @@ mqss::mqssci::MQSSCompiler compiler;
 mqss::mqssci::CompilerOptions opts;
 opts.optimization_level = mqss::mqssci::OptLevel::O1;        // O1, O2, or O3 — selects the preset pipeline
 opts.result_format = mqss::mqssci::ResultFormat::OPENQASM2;  // or QIR, QIRBASE, QIRADAPTIVE, QIRFULL
+opts.verify = false;                                         // optional; see Verifying the Compiled Output below
 
 std::optional<std::string> qasm = compiler.compile("path/to/circuit.qke", "planqc", opts); // Use compileSource() to parse source string
 if (!qasm) {
@@ -71,6 +72,27 @@ Walking through it:
    reported via `mlir::emitError` — MQSSCI is built without C++ exceptions, so a failed compile
    never throws or crashes your program, it just returns an empty optional.
 
+## Verifying the Compiled Output
+
+Set `opts.verify = true` to have `MQSSCompiler` check that native-gate decomposition didn't change
+what the circuit computes — the same circuit-equivalence checking described in
+[Verifying Circuit Correctness](verification.md), applied automatically during `compile`/
+`compileSource` rather than as a separate `--mqssci-verify` flag on `mqss-opt`.
+
+```cpp
+mqss::mqssci::CompilerOptions opts;
+opts.optimization_level = mqss::mqssci::OptLevel::O1;
+opts.result_format = mqss::mqssci::ResultFormat::OPENQASM2;
+opts.verify = true;
+
+std::optional<std::string> qasm = compiler.compile("path/to/circuit.qke", "planqc", opts);
+```
+
+This is a hard gate, not just a warning: if verification finds that decomposition broke equivalence,
+`compile`/`compileSource` return `std::nullopt` — same as any other failure — rather than handing
+you output that silently computes the wrong thing. The default is `opts.verify = false`, so turning
+it on is opt-in and costs nothing unless you ask for it.
+
 ## Choosing a Backend
 
 `compile` has overloads for three ways to select the native-gate set used for decomposition: by a
@@ -92,6 +114,11 @@ compiler.compile("path/to/circuit.qke", opts);
 | `"iqm"`        | `phased_rx`, `cz`    |
 | `"planqc"`     | `rx`, `cz`, `rz`     |
 | `"wmi"`        | `cz`, `x`, `y`, `rz` |
+
+The gate mnemonics used here — both in these built-in sets and in an explicit native-gate set you
+supply yourself — are the same ones the `BasisConversionPass` recognizes. See
+[Supported Gate Mnemonics](passes.md#supported-gate-mnemonics) for the full list of mnemonics, the
+Quake operation each one maps to, and their constraints (parameter count, controls, adjointness).
 
 The full signature (used in the examples above via its three shorthand overloads) also accepts a
 `qubit_connectivity` map alongside the native-gate set, for targets with restricted qubit

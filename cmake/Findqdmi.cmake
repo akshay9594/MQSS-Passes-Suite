@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
   qdmi
   GIT_REPOSITORY https://github.com/Munich-Quantum-Software-Stack/QDMI.git
-  GIT_TAG v1.3.2)
+  GIT_TAG v1.3.3)
 
 set(BUILD_QDMI_EXAMPLES
     ON
@@ -25,3 +25,6 @@ FetchContent_MakeAvailable(qdmi)
 set(BUILD_SHARED_LIBS
     ${_qdmi_saved_shared_libs}
     CACHE BOOL "" FORCE)
+
+set(QDMI_INCLUDE_DIR "${qdmi_SOURCE_DIR}/include")
+set(QDMI_EXAMPLES_DIR "${qdmi_SOURCE_DIR}/examples/")

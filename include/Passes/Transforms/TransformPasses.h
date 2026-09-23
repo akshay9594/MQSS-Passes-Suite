@@ -29,6 +29,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #pragma once
 
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassRegistry.h"
@@ -43,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
 #define GEN_PASS_DECL
-#include "Passes/Transforms/Transforms.h.inc"
+#include "Passes/Transforms/TransformPasses.h.inc"
 
 /**
  * @def CUDAQ_PREFIX_FUNCTION
@@ -90,4 +91,4 @@ CommonMappingPass(const CommonMappingPassOptions &options);
 } // namespace mqss::mqssci::opt
 
 #define GEN_PASS_REGISTRATION
-#include "Passes/Transforms/Transforms.h.inc"
+#include "Passes/Transforms/TransformPasses.h.inc"

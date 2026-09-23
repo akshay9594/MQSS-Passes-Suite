@@ -18,8 +18,9 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
-#include "Passes/Transforms/MappingPassUtils.h"
-#include "Utils/DebugUtils.h"
+#include "Passes/Transforms/TransformPasses.h"
+#include "Utils/MQTCoreUtils.h"
+#include "Utils/TranspilationPassUtils.h"
 #include "sc/configuration/Configuration.hpp"
 
 #include <llvm/Support/raw_ostream.h>
@@ -28,7 +29,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 namespace mqss::mqssci::opt {
 
 #define GEN_PASS_DEF_COMMONMAPPINGPASS
-#include "Passes/Transforms/Transforms.h.inc"
+#include "Passes/Transforms/TransformPasses.h.inc"
 
 } // namespace mqss::mqssci::opt
 
@@ -84,7 +85,13 @@ struct PipelineConfig {
       0---1
     */
     const CouplingMap cm = getCouplingMap(coupling_map);
-    config.arch.loadCouplingMap(5, cm);
+    std::set<std::uint32_t> qubits;
+    for (const auto &[a, b] : cm) {
+      qubits.insert(a);
+      qubits.insert(b);
+    }
+    std::size_t numQubits = qubits.size();
+    config.arch.loadCouplingMap(numQubits, cm);
     // Defining the settings of the mqt-mapper
     config.settings = getDefaultSettings();
     return config;
@@ -215,6 +222,30 @@ struct MeasureMeantOpInfoTy {
   const qc::Operation *MeasOp;
   SmallVector<mlir::Value, 2> Results;
 };
+
+// Performs a controlled Dead-Code elimination optimization.
+// It is less aggressive than MLIR's canonicalize and cse optimizations.
+// canonicalize and cse can remove newly introduced gates.
+void controlledDCE(SmallPtrSet<mlir::Operation *, 16> OpsToErase,
+                   mlir::Value OldAllocaOp, mlir::Value newAllocOp) {
+  llvm::SmallPtrSet<mlir::Operation *, 16> operandsToCleanup;
+
+  for (mlir::Operation *op : OpsToErase) {
+
+    for (mlir::Value operand : op->getOperands()) {
+      if (!OpsToErase.contains(operand.getDefiningOp()))
+        operandsToCleanup.insert(operand.getDefiningOp());
+    }
+  }
+
+  eraseOpsSafely(OpsToErase);
+  eraseOpsSafely(operandsToCleanup);
+
+  OldAllocaOp.replaceAllUsesWith(newAllocOp);
+  assert(OldAllocaOp.use_empty() &&
+         "Old alloca cannot have uses before being erased!");
+  OldAllocaOp.getDefiningOp()->erase();
+}
 
 void createMappedCircuit(mlir::IRRewriter &builder, Location loc,
                          QuantumDialect DialectTy, mlir::Value newAllocOp,
@@ -354,7 +385,7 @@ void performMapping(MyModuleAnalysis &analysis, Architecture architecture,
       }
 
       if (qview.isMeasureOp) {
-        loadMeasureOpIntQC(qview, qc);
+        loadMeasureOpIntoQC(qview, qc);
         MeasureOps[Op] = qview.measurements.size();
       }
     }

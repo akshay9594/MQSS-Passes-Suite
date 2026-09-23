@@ -19,11 +19,13 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "Utils/DialectUtils.h"
 #include "Utils/Error.h"
+#include "Utils/TransformUtils.h"
 #include "mlir/Target/LLVMIR/ModuleTranslation.h"
 
 #include "llvm/IR/Module.h"
 
 #include <cmath>
+#include <cudaq/Optimizer/Dialect/Quake/QuakeOps.h>
 #include <llvm/ADT/StringExtras.h>
 #include <mlir/IR/PatternMatch.h>
 #include <mlir/IR/Value.h>
@@ -98,15 +100,19 @@ void selectWiresAndReplaceUses(Operation *op, ValueRange newValues) {
   op->replaceAllUsesWith(newWireValues);
 }
 
-void rewriteHToRzXRz(IRRewriter &rewriter, quake::HOp op) {
+// The Rx here is always a fixed pi/2 rotation ("sx"/sqrt-X), never a
+// parameterized one -- BasisConversionPass's classifyOp() relies on that to
+// tell this apart from a genuinely arbitrary-angle Rx.
+void rewriteHToRzRxRz(IRRewriter &rewriter, quake::HOp op) {
   Location loc = op.getLoc();
   ValueRange target = op.getTargets();
   rewriter.setInsertionPointAfter(op);
 
-  auto c1 = createQuakeConstOp(loc, rewriter, M_PI, rewriter.getF64Type());
+  auto c1 = createQuakeConstOp(loc, rewriter, M_PI_2, rewriter.getF64Type());
   rewriter.create<quake::RzOp>(loc, false, ValueRange{c1}, ValueRange{},
                                target);
-  rewriter.create<quake::XOp>(loc, false, ValueRange{}, ValueRange{}, target);
+  rewriter.create<quake::RxOp>(loc, false, ValueRange{c1}, ValueRange{},
+                               target);
   auto c2 = createQuakeConstOp(loc, rewriter, M_PI_2, rewriter.getF64Type());
   rewriter.create<quake::RzOp>(loc, false, ValueRange{c2}, ValueRange{},
                                target);
@@ -274,7 +280,7 @@ void rewriteRyToRzRxRz(IRRewriter &rewriter, quake::RyOp op) {
   auto rotation = op.getParameters()[0];
   ValueRange target = op.getTargets();
   rewriter.setInsertionPointAfter(op);
-  auto c1 = createQuakeConstOp(loc, rewriter, M_PI, rewriter.getF64Type());
+  auto c1 = createQuakeConstOp(loc, rewriter, M_PI_2, rewriter.getF64Type());
   rewriter.create<quake::RzOp>(loc, false, ValueRange{c1}, ValueRange{},
                                target);
   rewriter.create<quake::RxOp>(loc, false, ValueRange{rotation}, ValueRange{},

@@ -1,6 +1,5 @@
 add_mlir_library(
-  MQSSCIPasses
-  SHARED
+  MQSSCITransformPasses
   CommonCNOTReversalPass.cpp
   CommonGateCancellationPass.cpp
   CommonGateCommutationPass.cpp
@@ -17,26 +16,29 @@ add_mlir_library(
   MQSSCICodeGenPasses
   qdmi::qdmi
   qdmi::example_driver
-  MQT::CoreNA
+  MQT::CoreIR
   MQT::QMapSCHeuristic
   MLIRPass
   MLIRTransforms)
 
 set_target_properties(
-  MQSSCIPasses
+  MQSSCITransformPasses
   PROPERTIES BUILD_RPATH "$<TARGET_FILE_DIR:qdmi::example_driver>"
              INSTALL_RPATH "$<TARGET_FILE_DIR:qdmi::example_driver>")
 
-target_compile_definitions(MQSSCIPasses PRIVATE ${MLIR_DEFINITIONS}
-                                                ${LLVM_DEFINITIONS})
+target_compile_definitions(MQSSCITransformPasses PRIVATE ${MLIR_DEFINITIONS}
+                                                         ${LLVM_DEFINITIONS})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(MQSSCIPasses PRIVATE MQSS_ENABLE_DEBUG)
+  target_compile_definitions(MQSSCITransformPasses PRIVATE MQSS_ENABLE_DEBUG)
 endif()
-target_compile_options(MQSSCIPasses PRIVATE -fexceptions)
+target_compile_options(MQSSCITransformPasses PRIVATE -fexceptions)
+if(TARGET obj.MQSSCITransformPasses)
+  target_compile_options(obj.MQSSCITransformPasses PRIVATE -fexceptions)
+endif()
 
 target_include_directories(
-  MQSSCIPasses
+  MQSSCITransformPasses
   PUBLIC $<BUILD_INTERFACE:${MQSSCI_ROOT_DIR}/include>
          $<BUILD_INTERFACE:${MQSSCI_ROOT_DIR_BINARY}/include>
          ${nlohmann_json_SOURCE_DIR}/include

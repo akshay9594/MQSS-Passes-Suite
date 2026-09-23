@@ -18,7 +18,7 @@ the License.
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 */
 
-#include "Passes/Transforms/PassUtils.h"
+#include "Utils/DebugUtils.h"
 #include "qdmi/client.h"
 // #include "qdmi/constants.h"
 // #include "qdmi/device.h"
@@ -97,7 +97,8 @@ static CouplingMap getDeviceCouplingMap(QDMI_Device device) {
   return coupling_map_set;
 }
 
-static std::tuple<string, string> extractQDMIObj(std::string conf_path) {
+static std::tuple<std::string, std::string>
+extractQDMIObj(std::string conf_path) {
   std::ifstream conf(conf_path);
   std::string line;
 
