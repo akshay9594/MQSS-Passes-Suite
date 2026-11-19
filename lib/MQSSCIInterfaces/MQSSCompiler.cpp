@@ -219,17 +219,34 @@ std::optional<std::string> mqss::mqssci::MQSSCompiler::compileImpl(
   // whether or not anything in the final circuit still calls it. Strip these
   // out so the returned OpenQASM2 is just the entry point's circuit body.
   case OPENQASM2:
-    pmLower.addPass(mqss::mqssci::codegen::QuakeToQASM2Pass(os));
+    pmLower.addPass(mqss::mqssci::codegen::CatalystToQASMPass(os));
+    // pmLower.addPass(mqss::mqssci::codegen::QuakeToQASM2Pass(os));
     if (mlir::failed(pmLower.run(*module))) {
       mlir::emitError(module->getLoc(),
-                      "Compiler: Conversion of Quake to QASM2 failed");
+                      "Compiler: Conversion of MLIR dialect to QASM2 failed");
       return std::nullopt;
     }
-    result =
-        restoreCallerGateNames(stripSpuriousGateDefs(result), appliedAliases);
-    if (backend_name == "LRZ") {
-      result = insertCallerGateDefinitions(result, appliedAliases);
+    // result =
+    //     restoreCallerGateNames(stripSpuriousGateDefs(result),
+    //     appliedAliases);
+    // if (backend_name == "LRZ") {
+    //   result = insertCallerGateDefinitions(result, appliedAliases);
+    // }
+    break;
+  case OPENQASM3:
+    pmLower.addPass(mqss::mqssci::codegen::CatalystToQASMPass(os, true));
+    // pmLower.addPass(mqss::mqssci::codegen::QuakeToQASM2Pass(os));
+    if (mlir::failed(pmLower.run(*module))) {
+      mlir::emitError(module->getLoc(),
+                      "Compiler: Conversion of MLIR dialect to QASM2 failed");
+      return std::nullopt;
     }
+    // result =
+    //     restoreCallerGateNames(stripSpuriousGateDefs(result),
+    //     appliedAliases);
+    // if (backend_name == "LRZ") {
+    //   result = insertCallerGateDefinitions(result, appliedAliases);
+    // }
     break;
   case IQMJSON:
     pmLower.addPass(mqss::mqssci::opt::createExpandMeasurementsPass());
